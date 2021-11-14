@@ -30,10 +30,17 @@ fi
 
 cd $TOP
 
-echo "Initializing HugeGraph Store..."
+DEFAULT_JAVA_OPTIONS=""
+JAVA_VERSION=$($JAVA -version 2>&1 | awk 'NR==1{gsub(/"/,""); print $3}' \
+              | awk -F'_' '{print $1}')
+if [[ $? -eq 0 && $JAVA_VERSION > 8 ]]; then
+      DEFAULT_JAVA_OPTIONS="--add-exports=java.base/jdk.internal.reflect=ALL-UNNAMED"
+fi
 
-$JAVA -cp $LIB/hugegraph-dist-*.jar -Djava.ext.dirs=$EXT \
-      com.baidu.hugegraph.cmd.InitStore \
-      "$CONF"/gremlin-server.yaml "$CONF"/rest-server.properties
+echo "Initializing HugeGraph Store..."
+CP=$(find "${LIB}" "${PLUGINS}" -name "*.jar"  | tr "\n" ":")
+$JAVA -cp $CP ${DEFAULT_JAVA_OPTIONS} \
+com.baidu.hugegraph.cmd.InitStore \
+"$CONF"/gremlin-server.yaml "$CONF"/rest-server.properties
 
 echo "Initialization finished."
