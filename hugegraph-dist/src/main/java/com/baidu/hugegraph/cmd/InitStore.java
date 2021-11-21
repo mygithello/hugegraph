@@ -20,13 +20,19 @@
 package com.baidu.hugegraph.cmd;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.commons.configuration.tree.ConfigurationNode;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.YAMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
-import org.apache.tinkerpop.gremlin.util.config.YamlConfiguration;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.HugeFactory;
@@ -76,26 +82,26 @@ public class InitStore {
         RegisterUtil.registerPlugins();
         RegisterUtil.registerServer();
 
-        YamlConfiguration config = new YamlConfiguration();
-        config.load(gremlinConfFile);
+        Parameters params = new Parameters();
+        FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
+        new FileBasedConfigurationBuilder(YAMLConfiguration.class).
+            configure(params.fileBased().setFileName(gremlinConfFile));
+        YAMLConfiguration config = (YAMLConfiguration) builder.getConfiguration();
 
-        List<ConfigurationNode> nodes = config.getRootNode()
-                                              .getChildren(GRAPHS);
+        List<HierarchicalConfiguration<ImmutableNode>> nodes =
+        config.childConfigurationsAt(GRAPHS);
         E.checkArgument(nodes.size() == 1,
                         "Must contain one '%s' node in config file '%s'",
                         GRAPHS, gremlinConfFile);
 
-        List<ConfigurationNode> graphNames = nodes.get(0).getChildren();
-
-        E.checkArgument(!graphNames.isEmpty(),
+        HierarchicalConfiguration<ImmutableNode> node = nodes.get(0);
+        E.checkArgument(!node.isEmpty(),
                         "Must contain at least one graph");
 
-        for (ConfigurationNode graphName : graphNames) {
-            @SuppressWarnings("unchecked")
-            String name = ((Map.Entry<String, Object>)
-                           graphName.getReference()).getKey();
-            HugeFactory.checkGraphName(name, "gremlin-server.yaml");
-            String configPath = graphName.getValue().toString();
+        for (Iterator<String> it = node.getKeys(); it.hasNext(); ) {
+            String graphName = it.next();
+            HugeFactory.checkGraphName(graphName, "gremlin-server.yaml");
+            String configPath = node.getProperty(graphName).toString();
             initGraph(configPath);
         }
 
