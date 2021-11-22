@@ -32,6 +32,8 @@ import org.apache.commons.configuration2.YAMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.configuration2.tree.NodeHandler;
+import org.apache.commons.configuration2.tree.NodeModel;
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactory;
 import org.slf4j.Logger;
 
@@ -90,18 +92,20 @@ public class InitStore {
 
         List<HierarchicalConfiguration<ImmutableNode>> nodes =
         config.childConfigurationsAt(GRAPHS);
-        E.checkArgument(nodes.size() == 1,
+        E.checkArgument(nodes.size() >= 1,
                         "Must contain one '%s' node in config file '%s'",
                         GRAPHS, gremlinConfFile);
 
-        HierarchicalConfiguration<ImmutableNode> node = nodes.get(0);
-        E.checkArgument(!node.isEmpty(),
-                        "Must contain at least one graph");
-
-        for (Iterator<String> it = node.getKeys(); it.hasNext(); ) {
-            String graphName = it.next();
-            HugeFactory.checkGraphName(graphName, "gremlin-server.yaml");
-            String configPath = node.getProperty(graphName).toString();
+        ImmutableNode root = null;
+        NodeModel<ImmutableNode> nodeModel = null;
+        NodeHandler<ImmutableNode> nodeHandler = null;
+        for (HierarchicalConfiguration<ImmutableNode> node : nodes) {
+            E.checkArgument((nodeModel = node.getNodeModel()) != null
+                            && (nodeHandler = nodeModel.getNodeHandler()) != null
+                            && (root = nodeHandler.getRootNode()) != null,
+                           "Node '%s' must contain root", node);
+            HugeFactory.checkGraphName(root.getNodeName(), "gremlin-server.yaml");
+            String configPath = root.getValue().toString();
             initGraph(configPath);
         }
 

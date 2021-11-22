@@ -5,9 +5,14 @@
 # timeout in ms of gremlin query
 evaluationTimeout: 30000
 
-channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
+channelizer: org.apache.tinkerpop.gremlin.server.channel.WsAndHttpChannelizer
 graphs: {
-  hugegraph: conf/hugegraph.properties
+  hugegraph: conf/hugegraph.properties,
+}
+authentication: {
+  authenticator: com.baidu.hugegraph.auth.StandardAuthenticator,
+  authenticationHandler: com.baidu.hugegraph.auth.WsAndHttpBasicAuthHandler,
+  config: {tokens: conf/rest-server.properties}
 }
 scriptEngines: {
   gremlin-groovy: {
