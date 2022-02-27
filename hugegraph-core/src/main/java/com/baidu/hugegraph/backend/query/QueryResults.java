@@ -19,8 +19,8 @@
 
 package com.baidu.hugegraph.backend.query;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +36,7 @@ import com.baidu.hugegraph.iterator.CIter;
 import com.baidu.hugegraph.iterator.FlatMapperIterator;
 import com.baidu.hugegraph.iterator.ListIterator;
 import com.baidu.hugegraph.iterator.MapperIterator;
+import com.baidu.hugegraph.perf.PerfUtil.Watched;
 import com.baidu.hugegraph.type.Idfiable;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.InsertionOrderUtil;
@@ -103,7 +104,7 @@ public class QueryResults<R> {
             // None result found
             return origin;
         }
-        Set<Id> ids;
+        Collection<Id> ids;
         if (!this.mustSortByInputIds() || this.paging() ||
             (ids = this.queryIds()).size() <= 1) {
             /*
@@ -115,8 +116,20 @@ public class QueryResults<R> {
         }
 
         // Fill map with all elements
-        Map<Id, T> map = new HashMap<>();
+        Map<Id, T> map = InsertionOrderUtil.newMap();
         QueryResults.fillMap(origin, map);
+
+        if (map.size() > ids.size()) {
+            /*
+             * This means current query is part of QueryResults. For example,
+             * g.V().has('country', 'china').has('city', within('HK', 'BJ'))
+             * will be converted to
+             * g.V().has('country', 'china').has('city', 'HK') or
+             * g.V().has('country', 'china').has('city', 'BJ'),
+             * and ids is just first index subquery's id, not all.
+             */
+            ids = map.keySet();
+        }
 
         return new MapperIterator<>(ids.iterator(), id -> {
             return map.get(id);
@@ -156,7 +169,7 @@ public class QueryResults<R> {
         return false;
     }
 
-    private Set<Id> queryIds() {
+    private Collection<Id> queryIds() {
         assert !this.queries.isEmpty();
         if (this.queries.size() == 1) {
             return this.queries.get(0).ids();
@@ -169,6 +182,7 @@ public class QueryResults<R> {
         return ids;
     }
 
+    @Watched
     public static <T> ListIterator<T> toList(Iterator<T> iterator) {
         try {
             return new ListIterator<>(Query.DEFAULT_CAPACITY, iterator);
@@ -177,6 +191,7 @@ public class QueryResults<R> {
         }
     }
 
+    @Watched
     public static <T> void fillList(Iterator<T> iterator, List<T> list) {
         try {
             while (iterator.hasNext()) {
@@ -189,6 +204,7 @@ public class QueryResults<R> {
         }
     }
 
+    @Watched
     public static <T extends Idfiable> void fillMap(Iterator<T> iterator,
                                                     Map<Id, T> map) {
         try {
@@ -222,6 +238,7 @@ public class QueryResults<R> {
         return qr[0];
     }
 
+    @Watched
     public static <T> T one(Iterator<T> iterator) {
         try {
             if (iterator.hasNext()) {
@@ -239,9 +256,13 @@ public class QueryResults<R> {
         return null;
     }
 
+    public static <T> Iterator<T> iterator(T elem) {
+        return new OneIterator<>(elem);
+    }
+
     @SuppressWarnings("unchecked")
-    public static <R> QueryResults<R> empty() {
-        return (QueryResults<R>) EMPTY;
+    public static <T> QueryResults<T> empty() {
+        return (QueryResults<T>) EMPTY;
     }
 
     @SuppressWarnings("unchecked")
@@ -266,6 +287,41 @@ public class QueryResults<R> {
         @Override
         public T next() {
             throw new NoSuchElementException();
+        }
+
+        @Override
+        public void close() throws Exception {
+            // pass
+        }
+    }
+
+    private static class OneIterator<T> implements CIter<T> {
+
+        private T element;
+
+        public OneIterator(T element) {
+            assert element != null;
+            this.element = element;
+        }
+
+        @Override
+        public Object metadata(String meta, Object... args) {
+            return null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.element != null;
+        }
+
+        @Override
+        public T next() {
+            if (this.element == null) {
+                throw new NoSuchElementException();
+            }
+            T result = this.element;
+            this.element = null;
+            return result;
         }
 
         @Override

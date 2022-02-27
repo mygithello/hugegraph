@@ -52,10 +52,17 @@ public class TaskApiTest extends BaseApiTest {
         assertArrayContains(tasks, "id", taskId);
 
         waitTaskSuccess(taskId);
+        /*
+         * FIXME: sometimes may get results of RUNNING tasks after the task
+         *        status is SUCCESS, which is stored in DB if there are worker
+         *        nodes in raft-api test.
+         * NOTE: seems the master node won't store task status in memory,
+         *       because only worker nodes store task status in memory.
+         */
         r = client().get(path, ImmutableMap.of("status", "RUNNING"));
         content = assertResponseStatus(200, r);
         tasks = assertJsonContains(content, "tasks");
-        Assert.assertTrue(tasks.isEmpty());
+        Assert.assertTrue(tasks.toString(), tasks.isEmpty());
     }
 
     @Test
@@ -79,7 +86,8 @@ public class TaskApiTest extends BaseApiTest {
                           r.getStatus() == 202 || r.getStatus() == 400);
         if (r.getStatus() == 202) {
             String status = assertJsonContains(content, "task_status");
-            Assert.assertEquals("cancelling", status);
+            Assert.assertTrue(status, status.equals("cancelling") ||
+                                      status.equals("cancelled"));
         } else {
             assert r.getStatus() == 400;
             String error = String.format(

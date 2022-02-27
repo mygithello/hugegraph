@@ -139,7 +139,7 @@ public class HbaseSessions extends BackendSessionPool {
         String hbaseSite = config.get(HbaseOptions.HBASE_HBASE_SITE);
         hConfig.addResource(new Path(hbaseSite));
 
-        if(isEnableKerberos) {
+        if (isEnableKerberos) {
             String krb5Conf = config.get(HbaseOptions.HBASE_KRB5_CONF);
             System.setProperty("java.security.krb5.conf", krb5Conf);
             String principal = config.get(HbaseOptions.HBASE_KERBEROS_PRINCIPAL);
@@ -712,7 +712,11 @@ public class HbaseSessions extends BackendSessionPool {
                                 byte[] stopRow, boolean inclusiveStop) {
             assert !this.hasChanges();
 
-            Scan scan = new Scan().withStartRow(startRow, inclusiveStart);
+            Scan scan = new Scan();
+            if (startRow != null) {
+                // Refer: https://issues.apache.org/jira/browse/HBASE-16498 (Bug Fix)
+                scan.withStartRow(startRow, inclusiveStart);
+            }
             if (stopRow != null) {
                 String version = VersionInfo.getVersion();
                 if (inclusiveStop && !VersionUtil.gte(version, "2.0")) {

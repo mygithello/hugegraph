@@ -20,9 +20,11 @@
 package com.baidu.hugegraph.backend.store.rocksdb;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
@@ -165,12 +167,9 @@ public class RocksDBTable extends BackendTable<Session, BackendEntry> {
         }
 
         // Query by id
-        if (query.conditions().isEmpty()) {
-            assert !query.ids().isEmpty();
-            // NOTE: this will lead to lazy create rocksdb iterator
-            return new BackendColumnIteratorWrapper(new FlatMapperIterator<>(
-                   query.ids().iterator(), id -> this.queryById(session, id)
-            ));
+        if (query.conditionsSize() == 0) {
+            assert query.idsSize() > 0;
+            return this.queryByIds(session, query.ids());
         }
 
         // Query by condition (or condition + id)
@@ -193,6 +192,18 @@ public class RocksDBTable extends BackendTable<Session, BackendEntry> {
         return session.scan(this.table(), id.asBytes());
     }
 
+    protected BackendColumnIterator queryByIds(Session session,
+                                               Collection<Id> ids) {
+        if (ids.size() == 1) {
+            return this.queryById(session, ids.iterator().next());
+        }
+
+        // NOTE: this will lead to lazy create rocksdb iterator
+        return new BackendColumnIteratorWrapper(new FlatMapperIterator<>(
+               ids.iterator(), id -> this.queryById(session, id)
+        ));
+    }
+
     protected BackendColumnIterator getById(Session session, Id id) {
         byte[] value = session.get(this.table(), id.asBytes());
         if (value == null) {
@@ -200,6 +211,18 @@ public class RocksDBTable extends BackendTable<Session, BackendEntry> {
         }
         BackendColumn col = BackendColumn.of(id.asBytes(), value);
         return new BackendEntry.BackendColumnIteratorWrapper(col);
+    }
+
+    protected BackendColumnIterator getByIds(Session session, Set<Id> ids) {
+        if (ids.size() == 1) {
+            return this.getById(session, ids.iterator().next());
+        }
+
+        List<byte[]> keys = new ArrayList<>(ids.size());
+        for (Id id : ids) {
+            keys.add(id.asBytes());
+        }
+        return session.get(this.table(), keys);
     }
 
     protected BackendColumnIterator queryByPrefix(Session session,
@@ -269,6 +292,8 @@ public class RocksDBTable extends BackendTable<Session, BackendEntry> {
                 HugeType type = query.resultType();
                 // NOTE: only support BinaryBackendEntry currently
                 entry = new BinaryBackendEntry(type, col.name);
+            } else {
+                assert !Bytes.equals(entry.id().asBytes(), col.name);
             }
             entry.columns(col);
             return entry;

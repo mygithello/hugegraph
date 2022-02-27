@@ -17,37 +17,26 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.util.collection;
+package com.baidu.hugegraph.job.schema;
 
-import com.baidu.hugegraph.perf.PerfUtil.Watched;
+import com.baidu.hugegraph.backend.tx.SchemaTransaction;
+import com.baidu.hugegraph.schema.PropertyKey;
 
-public class ConcurrentObjectIntMapping<V> implements ObjectIntMapping<V> {
+public class OlapPropertyKeyCreateJob extends SchemaJob {
 
-    private final SingleThreadObjectIntMapping<V> objectIntMapping;
-
-    public ConcurrentObjectIntMapping() {
-        this.objectIntMapping = new SingleThreadObjectIntMapping<>();
+    @Override
+    public String type() {
+        return CREATE_OLAP;
     }
 
     @Override
-    @Watched
-    public synchronized int object2Code(Object object) {
-        return this.objectIntMapping.object2Code(object);
-    }
-
-    @Override
-    @Watched
-    public synchronized V code2Object(int code) {
-        return this.objectIntMapping.code2Object(code);
-    }
-
-    @Override
-    public synchronized void clear() {
-        this.objectIntMapping.clear();
-    }
-
-    @Override
-    public synchronized String toString() {
-        return this.objectIntMapping.toString();
+    public Object execute() {
+        SchemaTransaction schemaTx = this.params().schemaTransaction();
+        PropertyKey propertyKey = schemaTx.getPropertyKey(this.schemaId());
+        // Create olap index label schema
+        schemaTx.createIndexLabelForOlapPk(propertyKey);
+        // Create olap data table
+        this.params().graphTransaction().createOlapPk(propertyKey.id());
+        return null;
     }
 }

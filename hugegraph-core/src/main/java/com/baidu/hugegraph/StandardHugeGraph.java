@@ -95,6 +95,7 @@ import com.baidu.hugegraph.type.HugeType;
 import com.baidu.hugegraph.type.define.GraphMode;
 import com.baidu.hugegraph.type.define.GraphReadMode;
 import com.baidu.hugegraph.type.define.NodeRole;
+import com.baidu.hugegraph.util.ConfigUtil;
 import com.baidu.hugegraph.util.DateUtil;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Events;
@@ -129,7 +130,8 @@ public class StandardHugeGraph implements HugeGraph {
            CoreOptions.OLTP_COLLECTION_TYPE,
            CoreOptions.VERTEX_DEFAULT_LABEL,
            CoreOptions.VERTEX_ENCODE_PK_NUMBER,
-           CoreOptions.STORE_GRAPH
+           CoreOptions.STORE_GRAPH,
+           CoreOptions.STORE
     );
 
     private static final Logger LOG = Log.logger(HugeGraph.class);
@@ -258,8 +260,13 @@ public class StandardHugeGraph implements HugeGraph {
                  serverId, serverRole, this.name);
         this.serverInfoManager().initServerInfo(serverId, serverRole);
 
-        LOG.info("Search olap property key for graph '{}'", this.name);
-        this.schemaTransaction().initAndRegisterOlapTables();
+        // TODO: check necessary?
+        LOG.info("Check olap property-key tables for graph '{}'", this.name);
+        for (PropertyKey pk : this.schemaTransaction().getPropertyKeys()) {
+            if (pk.olap()) {
+                this.graphTransaction().initAndRegisterOlapTable(pk.id());
+            }
+        }
 
         LOG.info("Restoring incomplete tasks for graph '{}'...", this.name);
         this.taskScheduler().restoreTasks();
@@ -897,6 +904,45 @@ public class StandardHugeGraph implements HugeGraph {
         E.checkState(this.tx.closed(),
                      "Ensure tx closed in all threads when closing graph '%s'",
                      this.name);
+    }
+
+    @Override
+    public void create(String configPath, Id server, NodeRole role) {
+        this.initBackend();
+        this.serverStarted(server, role);
+
+        // Write config to disk file
+        ConfigUtil.writeToFile(configPath, this.name(), this.configuration());
+    }
+
+    @Override
+    public void drop() {
+        this.clearBackend();
+
+        HugeConfig config = this.configuration();
+        this.storeProvider.onDeleteConfig(config);
+        ConfigUtil.deleteFile(config.getFile());
+
+        try {
+            /*
+             * It's hard to ensure all threads close the tx.
+             * TODO:
+             *  - schedule a tx-close to each thread,
+             *   or
+             *  - add forceClose() method to backend store.
+             */
+            this.close();
+        } catch (Throwable e) {
+            LOG.warn("Failed to close graph {}", e, this);
+        }
+    }
+
+    @Override
+    public HugeConfig cloneConfig(String newGraph) {
+        HugeConfig config = (HugeConfig) this.configuration().clone();
+        config.setDelimiterParsingDisabled(true);
+        this.storeProvider.onCloneConfig(config, newGraph);
+        return config;
     }
 
     @Override

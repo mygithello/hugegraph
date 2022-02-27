@@ -21,6 +21,7 @@ package com.baidu.hugegraph.backend.store.rocksdb;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collection;
 import java.util.List;
 
 import com.baidu.hugegraph.backend.id.Id;
@@ -84,7 +85,21 @@ public class RocksDBTables {
         @Override
         public void delete(Session session, BackendEntry entry) {
             assert entry.columns().isEmpty();
-            session.deletePrefix(this.table(), entry.id().asBytes());
+            /*
+             * Use `scanPrefix + delete` instead of `deletePrefix` due to
+             * the bug that reused iterator can't see deleteRange: #9255
+             * `deletePrefix`: session.deletePrefix(prefix)
+             * `scanPrefix + delete`: session.delete(scanPrefix(prefix))
+             */
+            byte[] prefix = entry.id().asBytes();
+            try (BackendColumnIterator results = session.scan(this.table(),
+                                                              prefix)) {
+                while (results.hasNext()) {
+                    byte[] column = results.next().name;
+                    session.delete(this.table(), column);
+                }
+                session.commit();
+            }
         }
     }
 
@@ -135,6 +150,13 @@ public class RocksDBTables {
         @Override
         protected BackendColumnIterator queryById(Session session, Id id) {
             return this.getById(session, id);
+        }
+
+        @Override
+        protected BackendColumnIterator queryByIds(Session session,
+                                                   Collection<Id> ids) {
+            // TODO: use getByIds() after batch version multi-get is ready
+            return super.queryByIds(session, ids);
         }
     }
 
@@ -240,7 +262,7 @@ public class RocksDBTables {
         @Override
         protected BackendColumnIterator queryByCond(Session session,
                                                     ConditionQuery query) {
-            assert !query.conditions().isEmpty();
+            assert query.conditionsSize() > 0;
 
             List<Condition> conds = query.syspropConditions(HugeKeys.ID);
             E.checkArgument(!conds.isEmpty(),

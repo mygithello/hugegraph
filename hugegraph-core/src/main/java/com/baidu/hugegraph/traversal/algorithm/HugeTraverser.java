@@ -33,6 +33,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.slf4j.Logger;
 
 import com.baidu.hugegraph.HugeException;
 import com.baidu.hugegraph.HugeGraph;
@@ -60,12 +61,15 @@ import com.baidu.hugegraph.type.define.HugeKeys;
 import com.baidu.hugegraph.util.CollectionUtil;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.InsertionOrderUtil;
+import com.baidu.hugegraph.util.Log;
 import com.baidu.hugegraph.util.collection.CollectionFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 public class HugeTraverser {
+
+    protected static final Logger LOG = Log.logger(HugeTraverser.class);
 
     private HugeGraph graph;
 
@@ -78,8 +82,8 @@ public class HugeTraverser {
     public static final String DEFAULT_MAX_DEGREE = "10000";
     public static final String DEFAULT_SKIP_DEGREE = "100000";
     public static final String DEFAULT_SAMPLE = "100";
-    public static final String DEFAULT_MAX_DEPTH = "50";
     public static final String DEFAULT_WEIGHT = "0";
+    public static final int DEFAULT_MAX_DEPTH = 5000;
 
     protected static final int MAX_VERTICES = 10;
 
@@ -618,7 +622,7 @@ public class HugeTraverser {
          */
         @Override
         public boolean equals(Object other) {
-            if (other == null || !(other instanceof Path)) {
+            if (!(other instanceof Path)) {
                 return false;
             }
             return this.vertices.equals(((Path) other).vertices);
@@ -724,6 +728,17 @@ public class HugeTraverser {
         @Override
         public String toString() {
             return this.paths.toString();
+        }
+
+        public void append(Id current) {
+            for (Iterator<Path> iter = paths.iterator(); iter.hasNext();) {
+                Path path = iter.next();
+                if (path.vertices().contains(current)) {
+                    iter.remove();
+                    continue;
+                }
+                path.addToLast(current);
+            }
         }
     }
 }

@@ -51,7 +51,9 @@ public class PathsTraverser extends HugeTraverser {
                         sourceDir == targetDir.opposite(),
                         "Source direction must equal to target direction" +
                         " or opposite to target direction");
-        checkPositive(depth, "max depth");
+        E.checkArgument(depth > 0 && depth <= DEFAULT_MAX_DEPTH,
+                        "The depth must be in (0, %s], but got: %s",
+                        DEFAULT_MAX_DEPTH, depth);
         checkDegree(degree);
         checkCapacity(capacity);
         checkLimit(limit);
@@ -63,16 +65,17 @@ public class PathsTraverser extends HugeTraverser {
         Id labelId = this.getEdgeLabelId(label);
         Traverser traverser = new Traverser(sourceV, targetV, labelId,
                                             degree, capacity, limit);
+        // We should stop early if walk backtrace or reach limit
         while (true) {
             if (--depth < 0 || traverser.reachLimit()) {
                 break;
             }
-            traverser.forward(sourceDir);
+            traverser.forward(targetV, sourceDir);
 
             if (--depth < 0 || traverser.reachLimit()) {
                 break;
             }
-            traverser.backward(targetDir);
+            traverser.backward(sourceV, targetDir);
         }
         return traverser.paths();
     }
@@ -103,12 +106,15 @@ public class PathsTraverser extends HugeTraverser {
          * Search forward from source
          */
         @Watched
-        public void forward(Directions direction) {
+        public void forward(Id targetV, Directions direction) {
             Iterator<Edge> edges;
 
             this.record.startOneLayer(true);
             while (this.record.hasNextKey()) {
                 Id vid = this.record.nextKey();
+                if (vid.equals(targetV)) {
+                    continue;
+                }
 
                 edges = edgesOfVertex(vid, direction, this.label, this.degree);
 
@@ -133,12 +139,16 @@ public class PathsTraverser extends HugeTraverser {
          * Search backward from target
          */
         @Watched
-        public void backward(Directions direction) {
+        public void backward(Id sourceV, Directions direction) {
             Iterator<Edge> edges;
 
             this.record.startOneLayer(false);
             while (this.record.hasNextKey()) {
                 Id vid = this.record.nextKey();
+                if (vid.equals(sourceV)) {
+                    continue;
+                }
+
                 edges = edgesOfVertex(vid, direction, this.label, this.degree);
 
                 while (edges.hasNext()) {

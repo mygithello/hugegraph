@@ -27,9 +27,9 @@ import org.slf4j.Logger;
 
 import com.baidu.hugegraph.HugeGraph;
 import com.baidu.hugegraph.backend.BackendException;
-import com.baidu.hugegraph.backend.id.Id;
 import com.baidu.hugegraph.backend.store.raft.StoreSnapshotFile;
 import com.baidu.hugegraph.config.CoreOptions;
+import com.baidu.hugegraph.config.HugeConfig;
 import com.baidu.hugegraph.event.EventHub;
 import com.baidu.hugegraph.event.EventListener;
 import com.baidu.hugegraph.util.E;
@@ -154,34 +154,6 @@ public abstract class AbstractBackendStoreProvider
     }
 
     @Override
-    public void createOlapTable(HugeGraph graph, Id pkId) {
-        String g = graph.option(CoreOptions.STORE_GRAPH);
-        BackendStore store = this.stores.get(g);
-        store.createOlapTable(pkId);
-    }
-
-    @Override
-    public void initAndRegisterOlapTable(HugeGraph graph, Id pkId) {
-        String g = graph.option(CoreOptions.STORE_GRAPH);
-        BackendStore store = this.stores.get(g);
-        store.checkAndRegisterOlapTable(pkId);
-    }
-
-    @Override
-    public void clearOlapTable(HugeGraph graph, Id pkId) {
-        String g = graph.option(CoreOptions.STORE_GRAPH);
-        BackendStore store = this.stores.get(g);
-        store.clearOlapTable(pkId);
-    }
-
-    @Override
-    public void removeOlapTable(HugeGraph graph, Id pkId) {
-        String g = graph.option(CoreOptions.STORE_GRAPH);
-        BackendStore store = this.stores.get(g);
-        store.removeOlapTable(pkId);
-    }
-
-    @Override
     public void createSnapshot() {
         String snapshotPrefix = StoreSnapshotFile.SNAPSHOT_DIR;
         for (BackendStore store : this.stores.values()) {
@@ -237,5 +209,15 @@ public abstract class AbstractBackendStoreProvider
     @Override
     public EventHub storeEventHub() {
         return this.storeEventHub;
+    }
+
+    @Override
+    public void onCloneConfig(HugeConfig config, String newGraph) {
+        config.setProperty(CoreOptions.STORE.name(), newGraph);
+    }
+
+    @Override
+    public void onDeleteConfig(HugeConfig config) {
+        // pass
     }
 }
