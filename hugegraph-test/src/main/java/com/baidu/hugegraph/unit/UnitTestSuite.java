@@ -27,7 +27,6 @@ import com.baidu.hugegraph.unit.cache.CacheTest;
 import com.baidu.hugegraph.unit.cache.CachedGraphTransactionTest;
 import com.baidu.hugegraph.unit.cache.CachedSchemaTransactionTest;
 import com.baidu.hugegraph.unit.cache.RamTableTest;
-import com.baidu.hugegraph.unit.cassandra.CassandraTest;
 import com.baidu.hugegraph.unit.core.AnalyzerTest;
 import com.baidu.hugegraph.unit.core.BackendMutationTest;
 import com.baidu.hugegraph.unit.core.BackendStoreSystemInfoTest;
@@ -49,11 +48,6 @@ import com.baidu.hugegraph.unit.id.EdgeIdTest;
 import com.baidu.hugegraph.unit.id.IdTest;
 import com.baidu.hugegraph.unit.id.IdUtilTest;
 import com.baidu.hugegraph.unit.id.SplicingIdGeneratorTest;
-import com.baidu.hugegraph.unit.mysql.MysqlUtilTest;
-import com.baidu.hugegraph.unit.mysql.WhereBuilderTest;
-import com.baidu.hugegraph.unit.rocksdb.RocksDBCountersTest;
-import com.baidu.hugegraph.unit.rocksdb.RocksDBSessionTest;
-import com.baidu.hugegraph.unit.rocksdb.RocksDBSessionsTest;
 import com.baidu.hugegraph.unit.serializer.BinaryBackendEntryTest;
 import com.baidu.hugegraph.unit.serializer.BinaryScatterSerializerTest;
 import com.baidu.hugegraph.unit.serializer.BinarySerializerTest;
@@ -121,18 +115,6 @@ import com.baidu.hugegraph.unit.util.collection.ObjectIntMappingTest;
     BinarySerializerTest.class,
     BinaryScatterSerializerTest.class,
     StoreSerializerTest.class,
-
-    /* cassandra */
-    CassandraTest.class,
-
-    /* mysql */
-    MysqlUtilTest.class,
-    WhereBuilderTest.class,
-
-    /* rocksdb */
-    RocksDBSessionsTest.class,
-    RocksDBSessionTest.class,
-    RocksDBCountersTest.class,
 
     /* utils */
     VersionTest.class,

@@ -53,7 +53,7 @@ public class ThreadRangePerfTest {
             LOG.info("===================================");
             LOG.info("threads: {}, times: {}, multiple: {}, profile: {}",
                      threads, times, multiple, profile);
-            new PerfExample1().test(newargs);
+//            new PerfExample1().test(newargs);
         }
 
         // Stop daemon thread

@@ -21,72 +21,6 @@
         <version>7</version>
     </parent>
 
-    <inceptionYear>2017</inceptionYear>
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <scm>
-        <url>https://github.com/hugegraph/hugegraph</url>
-        <connection>https://github.com/hugegraph/hugegraph</connection>
-        <developerConnection>https://github.com/hugegraph/hugegraph</developerConnection>
-    </scm>
-
-    <developers>
-        <developer>
-            <name>lizhangmei</name>
-            <email>javaloveme@gmail.com</email>
-        </developer>
-        <developer>
-            <name>zhoney</name>
-            <email>zhangyi89817@126.com</email>
-        </developer>
-        <developer>
-            <name>liningrui</name>
-            <email>liningrui@vip.qq.com</email>
-        </developer>
-        <developer>
-            <name>wangjiankui</name>
-            <email>wangjiankui1989@163.com</email>
-        </developer>
-        <developer>
-            <name>lizhigang</name>
-            <email>albert_liang@126.com</email>
-        </developer>
-        <developer>
-            <name>huanghaiping</name>
-            <email>954872405@qq.com</email>
-        </developer>
-        <developer>
-            <name>jishilei</name>
-            <email>littlestonelover@gmail.com</email>
-        </developer>
-        <developer>
-            <name>zhanghuimin</name>
-            <email>283157054@qq.com</email>
-        </developer>
-        <developer>
-            <name>liunanke</name>
-            <email>lnkustc@126.com</email>
-        </developer>
-        <developer>
-            <name>liujie</name>
-            <email>liujie23@unknown</email>
-        </developer>
-        <developer>
-            <name>houzhizhen</name>
-            <email>houzhizhen_101@163.com</email>
-        </developer>
-        <developer>
-            <name>zhangsuochao</name>
-            <email>mysuochao@163.com</email>
-        </developer>
-    </developers>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <top.level.dir>${project.basedir}/..</top.level.dir>
@@ -113,13 +47,7 @@
         <module>hugegraph-example</module>
         <module>hugegraph-dist</module>
         <module>hugegraph-test</module>
-        <module>hugegraph-cassandra</module>
-        <module>hugegraph-scylladb</module>
-        <module>hugegraph-rocksdb</module>
-        <module>hugegraph-mysql</module>
-        <module>hugegraph-palo</module>
         <module>hugegraph-hbase</module>
-        <module>hugegraph-postgresql</module>
     </modules>
 
     <dependencyManagement>
@@ -277,37 +205,6 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>license-maven-plugin</artifactId>
-                    <version>1.19</version>
-                    <executions>
-                        <execution>
-                            <id>default-cli</id>
-                            <configuration>
-                                <!-- Accept the pom module -->
-                                <acceptPomPackaging>true</acceptPomPackaging>
-                                <!-- Using the template which is grouped by License file -->
-                                <fileTemplate>/org/codehaus/mojo/license/third-party-file-groupByMultiLicense.ftl</fileTemplate>
-                                <licenseMerges>
-                                    <licenseMerge>The Apache Software License, Version 2.0|The Apache License, Version 2.0</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache License, Version 2.0</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache Public License 2.0</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache 2</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache 2.0</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache-2.0</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache License 2.0</licenseMerge>
-                                    <licenseMerge>The Apache Software License, Version 2.0|Apache License, version 2.0</licenseMerge>
-                                    <licenseMerge>3-Clause BSD License|BSD 3-clause</licenseMerge>
-                                    <licenseMerge>3-Clause BSD License|BSD 3-Clause</licenseMerge>
-                                    <licenseMerge>Eclipse Public License v1.0|Eclipse Public License 1.0</licenseMerge>
-                                    <licenseMerge>Eclipse Public License v1.0|Eclipse Public License - v 1.0</licenseMerge>
-                                    <licenseMerge>The MIT License|MIT License</licenseMerge>
-                                </licenseMerges>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.1</version>
                     <configuration>
@@ -354,20 +251,21 @@
             </activation>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>2.20</version>
-                        <executions>
-                            <execution>
-                                <id>core-test</id>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                                <phase>test</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
+<!--                    关闭测试插件-->
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-surefire-plugin</artifactId>-->
+<!--                        <version>2.20</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>core-test</id>-->
+<!--                                <goals>-->
+<!--                                    <goal>test</goal>-->
+<!--                                </goals>-->
+<!--                                <phase>test</phase>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
                 </plugins>
             </build>
         </profile>
@@ -451,76 +349,6 @@
                                 <phase>test</phase>
                             </execution>
                         </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>2.2.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.9.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <additionalJOptions>
-                                <additionalJOption>-Xdoclint:none</additionalJOption>
-                            </additionalJOptions>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Prevent `gpg` from using pinentry programs -->
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.3</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>

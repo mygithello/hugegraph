@@ -48,7 +48,7 @@ import com.baidu.hugegraph.util.Log;
     RestoreCoreTest.class,
     TaskCoreTest.class,
     AuthTest.class,
-    MultiGraphsTest.class,
+//    MultiGraphsTest.class,
     RamTableTest.class
 })
 public class CoreTestSuite {
