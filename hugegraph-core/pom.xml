@@ -15,6 +15,20 @@
         <top.level.dir>${basedir}/..</top.level.dir>
     </properties>
 
+    <!-- 配置jar向私服推送的仓库地址，推送时会根据版本不同推送到不同的仓库中  -->
+    <distributionManagement>
+        <repository>
+            <!-- 这里的id配置需要和setting文件中的servers中配置的对应上-->
+            <id>releases</id>
+            <url>http://172.172.0.15:8081/repository/mvn-release/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <url>http://172.172.0.15:8081/repository/mvn-snapshot/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+
     <dependencies>
         <dependency>
             <groupId>com.baidu.hugegraph</groupId>
